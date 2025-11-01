@@ -104,4 +104,20 @@
     font-size: 0.9em;
     color: var(--text-muted);
     margin-top: 0.5em;
+}
+
+/* Settings page styles */
+.linear-api-valid {
+    border-color: var(--text-success) !important;
+    box-shadow: 0 0 0 1px var(--text-success) !important;
+}
+
+.linear-api-invalid {
+    border-color: var(--text-error) !important;
+    box-shadow: 0 0 0 1px var(--text-error) !important;
+}
+
+.linear-connection-status {
+    margin-top: 8px;
+    font-weight: 500;
 } 

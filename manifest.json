@@ -1,7 +1,7 @@
 {
   "id": "linear",
   "name": "Linear",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "minAppVersion": "0.15.0",
   "description": "Integrate Linear issues with advanced filtering, sorting, and visual enhancements. Features include due date indicators, status colors, and comprehensive debug logging.",
   "author": "Casey Becking",
