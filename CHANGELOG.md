@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.1.3] - 2025-11-01
+### Added
+- **Enhanced Settings Page with Professional UI**:
+  - Completely redesigned settings interface with organized sections (API Configuration, Debug, Usage Examples)
+  - Real-time API key validation with visual feedback (green/red borders)
+  - "Test Connection" button to verify Linear API connectivity with status indicators
+  - Comprehensive step-by-step instructions for obtaining Linear API keys
+  - Enhanced debug mode section with detailed explanations of logged information
+  - Complete usage examples section with code samples for all supported features
+  - Links to plugin documentation and Linear API resources
+  - Security best practices and warnings for API key handling
+  - Visual notifications when debug mode is enabled/disabled
+
+### Improved
+- **Settings User Experience**:
+  - Better visual hierarchy with clear section headings
+  - Detailed descriptions and help text throughout
+  - Real-time connection status feedback
+  - Input validation styling and user guidance
+  - Professional styling with proper spacing and organization
+
+### Added CSS Styles
+- Visual feedback for API key validation states
+- Connection status indicator styling
+- Enhanced settings page visual organization
+
 ## [1.1.2]
 ### Added
 - Support for fetching and embedding a Linear issue by its ID using a code block (`id: ISSUE_ID`).
