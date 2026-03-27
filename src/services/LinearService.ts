@@ -198,10 +198,10 @@ export class LinearService {
         try {
             const states = await this.getWorkflowStates();
             const normalizedSearchName = this.normalizeStateName(statusName);
-            
+
             for (const state of states) {
                 const normalizedStateName = this.normalizeStateName(state.name);
-                
+
                 this.log(`Checking state: "${state.name}" (${state.id})`, {
                     matches: {
                         name: normalizedStateName === normalizedSearchName,
@@ -214,19 +214,43 @@ export class LinearService {
                         team: state.team ? `${state.team.name} (${state.team.id})` : 'no team'
                     }
                 });
-                
-                if (normalizedStateName === normalizedSearchName && 
+
+                if (normalizedStateName === normalizedSearchName &&
                     (!teamId || !state.team || state.team.id === teamId)) {
                     this.log(`Found matching state: "${state.name}"`);
                     return state as unknown as WorkflowState;
                 }
             }
-            
+
             this.log(`No matching state found for "${statusName}"`);
             return null;
         } catch (error) {
             this.log('Error finding status', error);
             return null;
+        }
+    }
+
+    private async getStatusIdsByName(statusName: string, teamId?: string): Promise<string[]> {
+        this.log(`Looking for all status IDs matching: "${statusName}"${teamId ? ` in team ID: ${teamId}` : ''}`);
+
+        try {
+            const states = await this.getWorkflowStates();
+            const normalizedSearchName = this.normalizeStateName(statusName);
+            const matchingIds: string[] = [];
+
+            for (const state of states) {
+                const normalizedStateName = this.normalizeStateName(state.name);
+                if (normalizedStateName === normalizedSearchName &&
+                    (!teamId || !state.team || state.team.id === teamId)) {
+                    matchingIds.push(state.id);
+                }
+            }
+
+            this.log(`Found ${matchingIds.length} matching state IDs for "${statusName}":`, matchingIds);
+            return matchingIds;
+        } catch (error) {
+            this.log('Error finding status IDs', error);
+            return [];
         }
     }
 
@@ -255,14 +279,18 @@ export class LinearService {
             }
 
             if (options?.status) {
-                const state = await this.getStatusByName(options.status, teamId);
-                if (!state) {
+                const stateIds = await this.getStatusIdsByName(options.status, teamId);
+                if (stateIds.length === 0) {
                     const message = `Status "${options.status}" not found${teamId ? ' for the specified team' : ''}`;
                     this.log(message);
                     new Notice(message);
                     return [];
                 }
-                filter.state = { id: { eq: state.id } };
+                if (stateIds.length === 1) {
+                    filter.state = { id: { eq: stateIds[0] } };
+                } else {
+                    filter.state = { id: { in: stateIds } };
+                }
                 this.log(`Added status filter:`, filter.state);
             }
 
