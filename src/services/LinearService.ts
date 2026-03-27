@@ -32,6 +32,7 @@ export interface IssueOptions {
         direction: 'asc' | 'desc';
     };
     hideDescription?: boolean;
+    cycle?: 'current';
 }
 
 export class LinearService {
@@ -308,6 +309,17 @@ export class LinearService {
             if (options?.assigneeEmail) {
                 filter.assignee = { email: { eq: options.assigneeEmail } };
                 this.log(`Added assignee filter:`, filter.assignee);
+            }
+
+            if (options?.cycle === 'current') {
+                if (!options.teamName && !options.assigneeEmail) {
+                    const message = 'Cycle filter requires a team or assignee to be specified';
+                    this.log(message);
+                    new Notice(message);
+                    return [];
+                }
+                filter.cycle = { isActive: { eq: true } };
+                this.log(`Added cycle filter: current (active)`);
             }
 
             this.log('Fetching issues with filter:', filter);

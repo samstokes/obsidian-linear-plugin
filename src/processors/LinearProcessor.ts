@@ -70,6 +70,10 @@ export class LinearProcessor extends MarkdownRenderChild {
                 if (parsed.hideDescription && parsed.hideDescription === true) {
                     options.hideDescription = true;
                 }
+
+                if (parsed.cycle && typeof parsed.cycle === 'string' && parsed.cycle.toLowerCase() === 'current') {
+                    options.cycle = 'current';
+                }
             }
             
             this.log('Final parsed options:', options);
@@ -257,6 +261,7 @@ export class LinearProcessor extends MarkdownRenderChild {
                 if (options.teamName) messages.push(`team \"${options.teamName}\"`);
                 if (options.status?.length) messages.push(`status \"${options.status.join(', ')}\"`);
                 if (options.assigneeEmail) messages.push(`assignee \"${options.assigneeEmail}\"`);
+                if (options.cycle) messages.push(`cycle \"${options.cycle}\"`);
                 if (options.sorting) messages.push(`sorted by ${options.sorting.field} ${options.sorting.direction}`);
 
                 const message = messages.length 
