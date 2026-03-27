@@ -25,13 +25,14 @@ interface WorkflowStateQueryResponse {
 export interface IssueOptions {
     limit?: number;
     teamName?: string;
-    status?: string;
+    status?: string[];
     assigneeEmail?: string;
     sorting?: {
         field: 'date';
         direction: 'asc' | 'desc';
     };
     hideDescription?: boolean;
+    cycle?: 'current';
 }
 
 export class LinearService {
@@ -198,10 +199,10 @@ export class LinearService {
         try {
             const states = await this.getWorkflowStates();
             const normalizedSearchName = this.normalizeStateName(statusName);
-            
+
             for (const state of states) {
                 const normalizedStateName = this.normalizeStateName(state.name);
-                
+
                 this.log(`Checking state: "${state.name}" (${state.id})`, {
                     matches: {
                         name: normalizedStateName === normalizedSearchName,
@@ -214,19 +215,43 @@ export class LinearService {
                         team: state.team ? `${state.team.name} (${state.team.id})` : 'no team'
                     }
                 });
-                
-                if (normalizedStateName === normalizedSearchName && 
+
+                if (normalizedStateName === normalizedSearchName &&
                     (!teamId || !state.team || state.team.id === teamId)) {
                     this.log(`Found matching state: "${state.name}"`);
                     return state as unknown as WorkflowState;
                 }
             }
-            
+
             this.log(`No matching state found for "${statusName}"`);
             return null;
         } catch (error) {
             this.log('Error finding status', error);
             return null;
+        }
+    }
+
+    private async getStatusIdsByName(statusName: string, teamId?: string): Promise<string[]> {
+        this.log(`Looking for all status IDs matching: "${statusName}"${teamId ? ` in team ID: ${teamId}` : ''}`);
+
+        try {
+            const states = await this.getWorkflowStates();
+            const normalizedSearchName = this.normalizeStateName(statusName);
+            const matchingIds: string[] = [];
+
+            for (const state of states) {
+                const normalizedStateName = this.normalizeStateName(state.name);
+                if (normalizedStateName === normalizedSearchName &&
+                    (!teamId || !state.team || state.team.id === teamId)) {
+                    matchingIds.push(state.id);
+                }
+            }
+
+            this.log(`Found ${matchingIds.length} matching state IDs for "${statusName}":`, matchingIds);
+            return matchingIds;
+        } catch (error) {
+            this.log('Error finding status IDs', error);
+            return [];
         }
     }
 
@@ -254,21 +279,47 @@ export class LinearService {
                 this.log(`Added team filter:`, filter.team);
             }
 
-            if (options?.status) {
-                const state = await this.getStatusByName(options.status, teamId);
-                if (!state) {
-                    const message = `Status "${options.status}" not found${teamId ? ' for the specified team' : ''}`;
+            if (options?.status?.length) {
+                const allStateIds: string[] = [];
+                const notFound: string[] = [];
+                for (const statusName of options.status) {
+                    const ids = await this.getStatusIdsByName(statusName, teamId);
+                    if (ids.length === 0) {
+                        notFound.push(statusName);
+                    } else {
+                        allStateIds.push(...ids);
+                    }
+                }
+                if (notFound.length > 0) {
+                    const message = `Status ${notFound.map(s => `"${s}"`).join(', ')} not found${teamId ? ' for the specified team' : ''}`;
                     this.log(message);
                     new Notice(message);
+                }
+                if (allStateIds.length === 0) {
                     return [];
                 }
-                filter.state = { id: { eq: state.id } };
+                if (allStateIds.length === 1) {
+                    filter.state = { id: { eq: allStateIds[0] } };
+                } else {
+                    filter.state = { id: { in: allStateIds } };
+                }
                 this.log(`Added status filter:`, filter.state);
             }
 
             if (options?.assigneeEmail) {
                 filter.assignee = { email: { eq: options.assigneeEmail } };
                 this.log(`Added assignee filter:`, filter.assignee);
+            }
+
+            if (options?.cycle === 'current') {
+                if (!options.teamName && !options.assigneeEmail) {
+                    const message = 'Cycle filter requires a team or assignee to be specified';
+                    this.log(message);
+                    new Notice(message);
+                    return [];
+                }
+                filter.cycle = { isActive: { eq: true } };
+                this.log(`Added cycle filter: current (active)`);
             }
 
             this.log('Fetching issues with filter:', filter);
