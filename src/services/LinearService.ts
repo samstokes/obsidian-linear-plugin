@@ -25,7 +25,7 @@ interface WorkflowStateQueryResponse {
 export interface IssueOptions {
     limit?: number;
     teamName?: string;
-    status?: string;
+    status?: string[];
     assigneeEmail?: string;
     sorting?: {
         field: 'date';
@@ -278,18 +278,29 @@ export class LinearService {
                 this.log(`Added team filter:`, filter.team);
             }
 
-            if (options?.status) {
-                const stateIds = await this.getStatusIdsByName(options.status, teamId);
-                if (stateIds.length === 0) {
-                    const message = `Status "${options.status}" not found${teamId ? ' for the specified team' : ''}`;
+            if (options?.status?.length) {
+                const allStateIds: string[] = [];
+                const notFound: string[] = [];
+                for (const statusName of options.status) {
+                    const ids = await this.getStatusIdsByName(statusName, teamId);
+                    if (ids.length === 0) {
+                        notFound.push(statusName);
+                    } else {
+                        allStateIds.push(...ids);
+                    }
+                }
+                if (notFound.length > 0) {
+                    const message = `Status ${notFound.map(s => `"${s}"`).join(', ')} not found${teamId ? ' for the specified team' : ''}`;
                     this.log(message);
                     new Notice(message);
+                }
+                if (allStateIds.length === 0) {
                     return [];
                 }
-                if (stateIds.length === 1) {
-                    filter.state = { id: { eq: stateIds[0] } };
+                if (allStateIds.length === 1) {
+                    filter.state = { id: { eq: allStateIds[0] } };
                 } else {
-                    filter.state = { id: { in: stateIds } };
+                    filter.state = { id: { in: allStateIds } };
                 }
                 this.log(`Added status filter:`, filter.state);
             }

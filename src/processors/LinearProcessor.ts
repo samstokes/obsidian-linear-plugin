@@ -40,8 +40,12 @@ export class LinearProcessor extends MarkdownRenderChild {
                     options.teamName = parsed.team;
                 }
                 
-                if (parsed.status && typeof parsed.status === 'string') {
-                    options.status = parsed.status;
+                if (parsed.status) {
+                    if (typeof parsed.status === 'string') {
+                        options.status = parsed.status.split(',').map((s: string) => s.trim()).filter(Boolean);
+                    } else if (Array.isArray(parsed.status)) {
+                        options.status = parsed.status.map((s: string) => String(s).trim()).filter(Boolean);
+                    }
                 }
                 
                 if (parsed.assignee && typeof parsed.assignee === 'string') {
@@ -251,7 +255,7 @@ export class LinearProcessor extends MarkdownRenderChild {
             if (!issues.length) {
                 const messages: string[] = [];
                 if (options.teamName) messages.push(`team \"${options.teamName}\"`);
-                if (options.status) messages.push(`status \"${options.status}\"`);
+                if (options.status?.length) messages.push(`status \"${options.status.join(', ')}\"`);
                 if (options.assigneeEmail) messages.push(`assignee \"${options.assigneeEmail}\"`);
                 if (options.sorting) messages.push(`sorted by ${options.sorting.field} ${options.sorting.direction}`);
 
