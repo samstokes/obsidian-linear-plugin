@@ -87,7 +87,10 @@ To sort issues by their due date, use the `sorting` option:
 ```linear
 sorting: dateascending   # Sort by due date, oldest first
 sorting: datedescending  # Sort by due date, newest first
+sorting: date            # Alias for datedescending
 ```
+
+The value is case-insensitive. Issues without a due date are sorted to the end regardless of direction. If `sorting` is omitted or set to an unrecognized value, issues are returned in Linear's default order.
 
 #### Hide Description
 
