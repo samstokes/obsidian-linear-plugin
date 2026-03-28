@@ -6,6 +6,7 @@ interface WorkflowStateNode {
     id: string;
     name: string;
     type: string;
+    position: number;
     team?: {
         id: string;
         name: string;
@@ -149,6 +150,7 @@ export class LinearService {
                                 id
                                 name
                                 type
+                                position
                                 team {
                                     id
                                     name
@@ -260,16 +262,25 @@ export class LinearService {
     }
 
     private buildSort(sorting?: IssueOptions['sorting']): any[] | undefined {
-        if (!sorting) return undefined;
+        if (!sorting || sorting.field === 'status') return undefined;
         const order = sorting.direction === 'asc' ? 'Ascending' : 'Descending';
         switch (sorting.field) {
             case 'priority':
                 return [{ priority: { order, noPriorityFirst: false } }];
-            case 'status':
-                return [{ workflowState: { order } }];
             case 'date':
                 return [{ dueDate: { order, nulls: 'last' } }];
         }
+    }
+
+    private async sortByStatus(nodes: Issue[], direction: 'asc' | 'desc'): Promise<Issue[]> {
+        const states = await this.getWorkflowStates();
+        const positionById = new Map(states.map(s => [s.id, s.position]));
+
+        return [...nodes].sort((a, b) => {
+            const posA = positionById.get(a.stateId ?? '') ?? Infinity;
+            const posB = positionById.get(b.stateId ?? '') ?? Infinity;
+            return direction === 'asc' ? posA - posB : posB - posA;
+        });
     }
 
     async getIssues(options?: IssueOptions): Promise<Issue[]> {
@@ -342,7 +353,11 @@ export class LinearService {
                 filter: Object.keys(filter).length > 0 ? filter : undefined,
                 sort,
             });
-            
+
+            if (options?.sorting?.field === 'status') {
+                nodes = await this.sortByStatus(nodes, options.sorting.direction);
+            }
+
             // Enhanced logging for issue details
             for (const issue of nodes) {
                 const assignee = issue.assignee ? await issue.assignee : null;
