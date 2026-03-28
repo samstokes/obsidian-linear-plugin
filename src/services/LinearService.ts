@@ -317,7 +317,7 @@ export class LinearService {
                     identifier: issue.identifier,
                     title: issue.title,
                     dueDate: issue.dueDate,
-                    formattedDueDate: issue.dueDate ? new Date(issue.dueDate).toLocaleDateString() : 'No due date',
+                    formattedDueDate: issue.dueDate ? new Date(issue.dueDate + 'T00:00:00').toLocaleDateString() : 'No due date',
                     assignee: assignee ? {
                         id: assignee.id,
                         name: assignee.name,
