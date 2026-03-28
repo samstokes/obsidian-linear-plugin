@@ -53,16 +53,14 @@ export class LinearProcessor extends MarkdownRenderChild {
                 }
                 
                 if (parsed.sorting && typeof parsed.sorting === 'string') {
-                    const sortValue = parsed.sorting.toLowerCase();
-                    if (sortValue === 'date' || sortValue === 'datedescending') {
+                    const parts = parsed.sorting.toLowerCase().trim().split(/\s+/);
+                    const field = parts[0];
+                    const dir = parts[1];
+                    const validFields = ['priority', 'status', 'date'] as const;
+                    if (validFields.includes(field as any)) {
                         options.sorting = {
-                            field: 'date',
-                            direction: 'desc'
-                        };
-                    } else if (sortValue === 'dateascending') {
-                        options.sorting = {
-                            field: 'date',
-                            direction: 'asc'
+                            field: field as typeof validFields[number],
+                            direction: dir === 'desc' ? 'desc' : 'asc'
                         };
                     }
                 }

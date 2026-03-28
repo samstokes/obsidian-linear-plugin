@@ -80,17 +80,19 @@ To show issues assigned to a specific person, use the `assignee` option with the
 assignee: user@example.com
 ```
 
-#### Sort by Due Date
+#### Sorting
 
-To sort issues by their due date, use the `sorting` option:
+To sort issues, use the `sorting` option with `<field>` or `<field> asc`/`<field> desc`:
 
 ```linear
-sorting: dateascending   # Sort by due date, oldest first
-sorting: datedescending  # Sort by due date, newest first
-sorting: date            # Alias for datedescending
+sorting: priority desc   # Urgent first (default direction)
+sorting: priority asc    # Low priority first
+sorting: status desc     # Sort by workflow state
+sorting: date asc        # Sort by due date, oldest first
+sorting: date desc       # Sort by due date, newest first
 ```
 
-The value is case-insensitive. Issues without a due date are sorted to the end regardless of direction. If `sorting` is omitted or set to an unrecognized value, issues are returned in Linear's default order.
+Supported fields: `priority`, `status`, `date`. Default direction is `asc` if omitted. Sorting is done server-side by Linear.
 
 #### Hide Description
 

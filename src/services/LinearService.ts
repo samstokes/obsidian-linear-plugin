@@ -28,7 +28,7 @@ export interface IssueOptions {
     status?: string[];
     assigneeEmail?: string;
     sorting?: {
-        field: 'date';
+        field: 'priority' | 'status' | 'date';
         direction: 'asc' | 'desc';
     };
     hideDescription?: boolean;
@@ -259,6 +259,19 @@ export class LinearService {
         return name.toLowerCase().replace(/[^a-z0-9]/g, '');
     }
 
+    private buildSort(sorting?: IssueOptions['sorting']): any[] | undefined {
+        if (!sorting) return undefined;
+        const order = sorting.direction === 'asc' ? 'Ascending' : 'Descending';
+        switch (sorting.field) {
+            case 'priority':
+                return [{ priority: { order, noPriorityFirst: false } }];
+            case 'status':
+                return [{ workflowState: { order } }];
+            case 'date':
+                return [{ dueDate: { order, nulls: 'last' } }];
+        }
+    }
+
     async getIssues(options?: IssueOptions): Promise<Issue[]> {
         try {
             this.log('Getting issues with options:', options);
@@ -322,43 +335,13 @@ export class LinearService {
                 this.log(`Added cycle filter: current (active)`);
             }
 
-            this.log('Fetching issues with filter:', filter);
+            const sort = this.buildSort(options?.sorting);
+            this.log('Fetching issues with filter:', { filter, sort });
             let { nodes } = await client.issues({
                 first: options?.limit,
-                filter: Object.keys(filter).length > 0 ? filter : undefined
+                filter: Object.keys(filter).length > 0 ? filter : undefined,
+                sort,
             });
-            
-            // Sort by due date if requested
-            if (options?.sorting?.field === 'date') {
-                this.log('Sorting issues by due date', {
-                    direction: options.sorting.direction,
-                    totalIssues: nodes.length,
-                    issuesWithDueDate: nodes.filter(n => n.dueDate).length
-                });
-
-                nodes = nodes.sort((a, b) => {
-                    // If sorting ascending: null dates go to the end
-                    // If sorting descending: null dates go to the end
-                    if (!a.dueDate && !b.dueDate) return 0;
-                    if (!a.dueDate) return 1;
-                    if (!b.dueDate) return -1;
-
-                    const dateA = new Date(a.dueDate).getTime();
-                    const dateB = new Date(b.dueDate).getTime();
-                    return options.sorting!.direction === 'asc' ? dateA - dateB : dateB - dateA;
-                });
-
-                this.log('Sorting complete', {
-                    firstIssue: nodes[0] ? {
-                        identifier: nodes[0].identifier,
-                        dueDate: nodes[0].dueDate
-                    } : 'no issues',
-                    lastIssue: nodes[nodes.length - 1] ? {
-                        identifier: nodes[nodes.length - 1].identifier,
-                        dueDate: nodes[nodes.length - 1].dueDate
-                    } : 'no issues'
-                });
-            }
             
             // Enhanced logging for issue details
             for (const issue of nodes) {
