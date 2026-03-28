@@ -4,6 +4,11 @@
 - `fork`: Sam's fork branch. Contains admin/fork-specific changes (e.g. manifest rename, README updates). Feature branches are merged here after development.
 - Feature branches: branch off `main` unless that would introduce merge conflicts with `fork`, in which case branch off `fork`. Merge into `fork` when done.
 
+# Remotes
+
+- `origin`: upstream repo (caseybecking). Read-only.
+- `fork`: Sam's fork (samstokes). Push without `sam/` prefix — this is Sam's own repo.
+
 # Development
 
 - `npm install` to install dependencies
