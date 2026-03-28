@@ -89,7 +89,7 @@ export class LinearProcessor extends MarkdownRenderChild {
             identifier: issue.identifier,
             title: issue.title,
             dueDate: issue.dueDate,
-            formattedDueDate: issue.dueDate ? new Date(issue.dueDate).toLocaleDateString() : 'No due date'
+            formattedDueDate: issue.dueDate ? new Date(issue.dueDate + 'T00:00:00').toLocaleDateString() : 'No due date'
         });
 
         try {
@@ -110,7 +110,7 @@ export class LinearProcessor extends MarkdownRenderChild {
             // Add due date if available
             if (issue.dueDate) {
                 this.log('Processing due date:', issue.dueDate);
-                const dueDate = new Date(issue.dueDate);
+                const dueDate = new Date(issue.dueDate + 'T00:00:00');
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const tomorrow = new Date(today);
